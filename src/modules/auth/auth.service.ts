@@ -1,14 +1,25 @@
+import { IJwtPayload } from './interface/jwt-payload.interface';
+import { IToken } from './interface/token.interface';
+import { IUser } from './../user/interface/user.interface';
 import {
   Injectable,
   Logger,
   ConflictException,
   InternalServerErrorException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { IUser } from '../user/interface/user.interface';
 import { JwtService } from '@nestjs/jwt';
 import { NewUserDto } from '../user/dto/new-user.dto';
+import { LoginDto } from './dto/login.dto';
+import * as argon2 from 'argon2';
+import * as jwt from 'jsonwebtoken';
+import {
+  JWT_EXPIREINS,
+  JWT_REFRESH,
+  JWT_REFRESH_EXPIRESIN,
+} from '../../config';
 
 @Injectable()
 export class AuthService {
@@ -19,11 +30,95 @@ export class AuthService {
 
   constructor(
     @InjectModel('User')
-    private readonly userModel: Model<IUser>, // private jwtService: JwtService,
+    private readonly userModel: Model<IUser>,
+    private jwtService: JwtService,
   ) {}
 
+  // validation (local-strategy)
+  async validateUser(loginDto: LoginDto): Promise<any> {
+    const user = await this.userModel
+      .findOne({ username: loginDto.username })
+      .select('+password');
+
+    // check credentials
+    const isMatch = await argon2.verify(user.password, loginDto.password);
+
+    if (user && isMatch) {
+      const tokens: IToken = await this.createTokens(user);
+
+      const data = {
+        userId: user.id,
+      };
+
+      // token store
+      this.tokenList[tokens.refreshToken] = data;
+
+      this.logger.verbose(`User "${user.username}" logged in`);
+      // console.log(this.tokenList);
+
+      return tokens;
+    }
+  }
+
+  // generate tokens
+  async createTokens(user: IUser): Promise<IToken> {
+    const payload: IJwtPayload = { id: user.id };
+
+    const token = this.jwtService.sign(payload, {
+      expiresIn: JWT_EXPIREINS,
+    });
+
+    const refreshToken = jwt.sign(payload, JWT_REFRESH, {
+      expiresIn: JWT_REFRESH_EXPIRESIN,
+    });
+
+    return {
+      token,
+      refreshToken,
+    };
+  }
+
+  // validate token, jwt-strategy/refresh-strategy
+  async validateToken(payload: IJwtPayload): Promise<IUser> {
+    return await this.userModel.findOne({ _id: payload.id });
+  }
+
+  // refresh token
+  async validateRefresh(payload: IJwtPayload): Promise<{ token: string }> {
+    // decode payload
+    const decoded = jwt.verify(payload['refreshToken'], JWT_REFRESH);
+
+    // get user from payload
+    const user: IUser = await this.userModel.findOne({ _id: decoded['id'] });
+
+    try {
+      const refreshToken: string = payload['refreshToken'];
+
+      const isMatch = refreshToken in this.tokenList;
+
+      if (isMatch) {
+        const payload: IJwtPayload = { id: user.id };
+        const token = this.jwtService.sign(payload, {
+          expiresIn: JWT_EXPIREINS,
+        });
+
+        // update token store
+        this.tokenList[refreshToken].token = token;
+
+        this.logger.verbose(`Token refreshed for user "${user.username}"`);
+        return { token };
+      } else {
+        this.logger.error('Invalid token credentials');
+        throw new UnauthorizedException('Invalid token credentials');
+      }
+    } catch (err) {
+      this.logger.error(`Invalid/expired token: ${err.message}`);
+      throw new UnauthorizedException(`Invalid/expired token: ${err.message}`);
+    }
+  }
+
   // register new user
-  async registerUser(newUserDto: NewUserDto): Promise<Object> {
+  async registerUser(newUserDto: NewUserDto): Promise<any> {
     // password validation
     if (newUserDto.password !== newUserDto.confirm_password) {
       this.logger.error('Passwords does not match');
