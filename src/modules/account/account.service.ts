@@ -19,20 +19,21 @@ export class AccountService {
   ) {}
 
   // new bill
-  async newBill(newBillDto: NewBillDto, id: string): Promise<any> {
+  async newBill(newBillDto: NewBillDto, user: IUser): Promise<any> {
     // new bill
     const { bill, description } = newBillDto;
     const newBill = new this.accountModel();
 
     newBill.bill = bill;
     newBill.description = description;
+    newBill._user = user;
 
     try {
-      const userAccount = await this.insertBillToAccount(newBill, id);
+      // const userAccount = await this.insertBillToAccount(newBill, id);
       await newBill.save();
 
       this.logger.verbose(
-        `New bill "${newBillDto.description}" of value ${newBillDto.bill} added to your account. Wallet: ${userAccount.wallet}`,
+        `New bill "${newBillDto.description}" of value ${newBillDto.bill} added to your account. Wallet: `,
       );
 
       return newBill;
@@ -52,12 +53,16 @@ export class AccountService {
     userAccount['wallet'] = userAccount.wallet - newBillDto.bill;
     await userAccount.save();
 
-    return { wallet: userAccount.wallet };
+    this.logger.verbose(
+      `New bill of "${newBillDto.description}", value: ${newBillDto.bill}. User wallet: ${userAccount.wallet}`,
+    );
+
+    return { wallet: userAccount.wallet, userAccount };
   }
 
   // sum all bills
-  async sumBills(): Promise<any> {
-    const bills = await this.accountModel.find();
+  async sumBills(user: IUser): Promise<any> {
+    const bills = await this.accountModel.find({ _user: user });
 
     const billsValue = bills.reduce((a, b) => {
       return a + b.bill;
@@ -68,6 +73,8 @@ export class AccountService {
     });
 
     this.logger.verbose(`Total of bills: R$ ${billsValue.toFixed(2)}`);
+
+    // return bills;
     return {
       items: billsDesc,
       total: `R$ ${billsValue.toFixed(2)}`,

@@ -43,21 +43,22 @@ export class UserService {
   }
 
   // add money to wallet
-  async fatWallet(id: string, creditDto: CreditDto): Promise<any> {
+  async fatWallet(id: string, user: IUser, creditDto: CreditDto): Promise<any> {
     const { credit } = creditDto;
 
     try {
-      const user = await this.userModel.findOne({ _id: id });
-      user['wallet'] = user.wallet + credit;
-      user.save();
+      const userWallet = await this.userModel.findOne({ _id: user.id });
+
+      userWallet['wallet'] = userWallet.wallet + credit;
+      userWallet.save();
 
       this.logger.verbose(
-        `User: "${user.username}", wallet credit: ${user.wallet}`,
+        `User: "${user.username}", wallet credit: ${user.wallet + credit}`,
       );
 
       return {
         userAccount: user.username,
-        wallet: user.wallet,
+        wallet: `${user.wallet + credit}`,
       };
     } catch (err) {
       this.logger.error(

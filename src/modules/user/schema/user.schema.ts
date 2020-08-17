@@ -36,7 +36,7 @@ export const UserSchema = new mongoose.Schema({
   _bills: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      red: 'Account',
+      ref: 'Account',
     },
   ],
 });

@@ -1,11 +1,11 @@
 import * as mongoose from 'mongoose';
 
 export const AccountSchema = new mongoose.Schema({
-  // _user: {
-  //   type: mongoose.Schema.Types.ObjectId,
-  //   ref: 'User',
-  //   required: true,
-  // },
+  _user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
 
   bill: {
     type: Number,
