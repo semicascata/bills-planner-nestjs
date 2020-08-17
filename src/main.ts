@@ -8,7 +8,7 @@ import * as rateLimit from 'express-rate-limit';
 import * as mongoSanitize from 'express-mongo-sanitize';
 import * as bodyParser from 'body-parser';
 import { NODE_ENV } from './config';
-import { LoggingInterceptor, HttpExeceptionFilter } from './common';
+import { LoggingInterceptor /*HttpExeceptionFilter*/ } from './common';
 
 async function bootstrap() {
   try {
@@ -42,7 +42,7 @@ async function bootstrap() {
       app.useGlobalInterceptors(new LoggingInterceptor());
     }
 
-    app.useGlobalFilters(new HttpExeceptionFilter());
+    // app.useGlobalFilters(new HttpExeceptionFilter());
 
     const PORT: number = parseInt(process.env.PORT) || 3003;
     await app.listen(PORT);

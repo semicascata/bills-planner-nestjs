@@ -149,4 +149,18 @@ export class AuthService {
       );
     }
   }
+
+  // get user from 'req.body.user'
+  async getUser(reqBody: any): Promise<IUser> {
+    try {
+      if (reqBody) {
+        const user: IUser = reqBody.user;
+        this.logger.verbose(`Get user "${user.username}"`);
+        return user;
+      }
+    } catch (err) {
+      this.logger.error(`Failed getting user: ${err.message}`);
+      throw new UnauthorizedException(`Failed getting user: ${err.message}`);
+    }
+  }
 }

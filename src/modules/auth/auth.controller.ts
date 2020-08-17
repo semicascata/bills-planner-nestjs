@@ -5,6 +5,8 @@ import {
   Body,
   ValidationPipe,
   UseGuards,
+  Get,
+  Req,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { NewUserDto } from '../user/dto/new-user.dto';
@@ -35,5 +37,11 @@ export class AuthController {
     @Body(ValidationPipe) payload: IJwtPayload,
   ): Promise<{ token: string }> {
     return await this.authService.validateRefresh(payload);
+  }
+
+  @Get('profile')
+  @UseGuards(AuthGuard('jwt'))
+  async getUser(@Req() reqBody: any): Promise<IUser> {
+    return await this.authService.getUser(reqBody);
   }
 }

@@ -5,17 +5,21 @@ import {
   Param,
   Body,
   Put,
-  // Post,
+  UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { IUser } from './interface/user.interface';
+import { IUser, Role } from './interface/user.interface';
 import { CreditDto } from './dto/credit.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { AuthRole } from '../../common';
 
 @Controller('bp/v1/users')
+@UseGuards(AuthGuard('jwt'))
 export class UserController {
   constructor(private userService: UserService) {}
 
   @Get()
+  @AuthRole(Role.admin)
   async fetchUsers(): Promise<IUser[]> {
     return await this.userService.fetchUsers();
   }
