@@ -85,20 +85,55 @@ export class AccountService {
   async sumBills(user: IUser): Promise<any> {
     const bills = await this.accountModel.find({ _user: user });
 
-    const billsValue = bills.reduce((a, b) => {
-      return a + b.bill;
+    // bills payed
+    const creditedBills = bills.reduce((a, b) => {
+      if (b.credited === true) {
+        return a + b.bill;
+      } else {
+        return false;
+      }
     }, 0);
 
-    const billsDesc = bills.map(a => {
-      return a.description;
+    // items payed
+    const itemsPayed = bills.map(bill => {
+      if (bill.credited === true) {
+        return bill.description;
+      } else {
+        return '';
+      }
     });
 
-    this.logger.verbose(`Total of bills: R$ ${billsValue.toFixed(2)}`);
+    // bills to pay
+    const needToPay = bills.reduce((a, b) => {
+      if (b.credited === false) {
+        return a + b.bill;
+      } else {
+        return false;
+      }
+    }, 0);
+
+    // items to pay
+    const itemsToPay = bills.map(bill => {
+      if (bill.credited === false) {
+        return bill.description;
+      } else {
+        return '';
+      }
+    });
+
+    this.logger.verbose(
+      `User: ${user.username}, Wallet: ${user.wallet}, Payed: ${
+        creditedBills ? true : 'All good'
+      }, Need to pay: ${needToPay ? 'R$' + needToPay.toFixed(2) : 'All good'}`,
+    );
 
     // return bills;
     return {
-      items: billsDesc,
-      total: `R$ ${billsValue.toFixed(2)}`,
+      userWallet: user.wallet,
+      payed: `${creditedBills ? 'R$' + creditedBills.toFixed(2) : 'All good'}`,
+      itemsPayed,
+      needToPay: `${needToPay ? 'R$' + needToPay.toFixed(2) : 'All good'}`,
+      itemsToPay,
     };
   }
 }
