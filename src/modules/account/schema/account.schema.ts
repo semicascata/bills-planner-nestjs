@@ -19,6 +19,11 @@ export const AccountSchema = new mongoose.Schema({
     required: [true, 'please, insert a description'],
   },
 
+  credited: {
+    type: Boolean,
+    required: true,
+  },
+
   createdAt: {
     type: Date,
     default: Date.now,

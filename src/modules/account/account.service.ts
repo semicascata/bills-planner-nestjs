@@ -26,6 +26,7 @@ export class AccountService {
 
     newBill.bill = bill;
     newBill.description = description;
+    newBill.credited = false;
     newBill._user = user;
 
     try {
@@ -46,18 +47,38 @@ export class AccountService {
   }
 
   // insert bill to the account
-  async insertBillToAccount(newBillDto: NewBillDto, id: string): Promise<any> {
+  async insertBillToAccount(user: IUser): Promise<any> {
     // user account
-    const userAccount = await this.userModel.findOne({ _id: id });
+    const userAccount = await this.userModel.findOne({ _id: user.id });
 
-    userAccount['wallet'] = userAccount.wallet - newBillDto.bill;
+    // bills
+    const bills = await this.accountModel
+      .find({ _user: userAccount })
+      .where({ credited: false });
+
+    if (bills.length === 0) {
+      this.logger.verbose(
+        `All bills already credited, wallet: ${userAccount.wallet}`,
+      );
+      return { wallet: userAccount.wallet };
+    }
+
+    bills.map(bill => {
+      if (bill.credited === false) {
+        bill.credited = true;
+        userAccount['wallet'] = userAccount.wallet - bill.bill;
+
+        bill.save();
+      }
+    });
+
     await userAccount.save();
 
     this.logger.verbose(
-      `New bill of "${newBillDto.description}", value: ${newBillDto.bill}. User wallet: ${userAccount.wallet}`,
+      `Bills inserted on wallet. User: "${userAccount.username}", Wallet: ${userAccount.wallet}`,
     );
 
-    return { wallet: userAccount.wallet, userAccount };
+    return { wallet: userAccount.wallet, bills };
   }
 
   // sum all bills

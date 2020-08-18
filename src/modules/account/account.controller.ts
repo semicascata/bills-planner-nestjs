@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Body,
-  Get,
-  Param,
-  Post,
-  Put,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Body, Get, Post, Put, UseGuards } from '@nestjs/common';
 import { AccountService } from './account.service';
 import { NewBillDto } from './dto/account.dto';
 import { GetUser } from '../../common';
@@ -33,11 +25,9 @@ export class AccountController {
     return await this.accountService.sumBills(user);
   }
 
-  @Put('newbill/:id')
-  async insertBillToAccount(
-    @Body() newBillDto: NewBillDto,
-    @Param('id') id: string,
-  ): Promise<any> {
-    return await this.accountService.insertBillToAccount(newBillDto, id);
+  @Put('userbill/commit')
+  @UseGuards(AuthGuard('jwt'))
+  async insertBillToAccount(@GetUser() user: IUser): Promise<any> {
+    return await this.accountService.insertBillToAccount(user);
   }
 }
