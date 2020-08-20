@@ -81,59 +81,50 @@ export class AccountService {
     return { wallet: userAccount.wallet, bills };
   }
 
-  // sum all bills
-  async sumBills(user: IUser): Promise<any> {
-    const bills = await this.accountModel.find({ _user: user });
+  // payed bills
+  async payedBills(user: IUser): Promise<any> {
+    const bills = await this.accountModel
+      .find({ _user: user })
+      .where({ credited: true });
 
-    // bills payed
-    const creditedBills = bills.reduce((a, b) => {
-      if (b.credited === true) {
-        return a + b.bill;
-      } else {
-        return false;
-      }
+    const userAccount = await this.userModel.findOne({ _id: user.id });
+
+    const pBills = bills.reduce((a, b) => {
+      return a + b.bill;
     }, 0);
 
-    // items payed
-    const itemsPayed = bills.map(bill => {
-      if (bill.credited === true) {
-        return bill.description;
-      } else {
-        return '';
-      }
+    const items = bills.map(item => {
+      return item.description;
     });
 
-    // bills to pay
-    const needToPay = bills.reduce((a, b) => {
-      if (b.credited === false) {
-        return a + b.bill;
-      } else {
-        return false;
-      }
-    }, 0);
-
-    // items to pay
-    const itemsToPay = bills.map(bill => {
-      if (bill.credited === false) {
-        return bill.description;
-      } else {
-        return '';
-      }
-    });
-
-    this.logger.verbose(
-      `User: ${user.username}, Wallet: ${user.wallet}, Payed: ${
-        creditedBills ? true : 'All good'
-      }, Need to pay: ${needToPay ? 'R$' + needToPay.toFixed(2) : 'All good'}`,
-    );
-
-    // return bills;
     return {
-      userWallet: user.wallet,
-      payed: `${creditedBills ? 'R$' + creditedBills.toFixed(2) : 'All good'}`,
-      itemsPayed,
-      needToPay: `${needToPay ? 'R$' + needToPay.toFixed(2) : 'All good'}`,
-      itemsToPay,
+      userWallet: userAccount.wallet,
+      total: pBills,
+      items,
+    };
+  }
+
+  // bill to pay
+  async needToPay(user: IUser): Promise<any> {
+    const bills = await this.accountModel
+      .find({ _user: user })
+      .where({ credited: false });
+
+    const userAccount = await this.userModel.findOne({ _id: user.id });
+
+    const npBills = bills.reduce((a, b) => {
+      return a + b.bill;
+    }, 0);
+
+    const items = bills.map(item => {
+      return item.description;
+    });
+
+    return {
+      userWallet: userAccount.wallet,
+      afterPayBills: userAccount.wallet - npBills,
+      total: npBills,
+      items,
     };
   }
 }

@@ -19,10 +19,16 @@ export class AccountController {
     return this.accountService.newBill(newBillDto, user);
   }
 
-  @Get()
+  @Get('payed')
   @UseGuards(AuthGuard('jwt'))
-  async sumBills(@GetUser() user: IUser): Promise<any> {
-    return await this.accountService.sumBills(user);
+  async payedBills(@GetUser() user: IUser): Promise<any> {
+    return await this.accountService.payedBills(user);
+  }
+
+  @Get('needtopay')
+  @UseGuards(AuthGuard('jwt'))
+  async needToPay(@GetUser() user: IUser): Promise<any> {
+    return await this.accountService.needToPay(user);
   }
 
   @Put('userbill/commit')
