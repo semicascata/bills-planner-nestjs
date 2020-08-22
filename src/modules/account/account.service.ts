@@ -16,7 +16,7 @@ export class AccountService {
   constructor(
     @InjectModel('Account') private readonly accountModel: Model<IAccount>,
     @InjectModel('User') private readonly userModel: Model<IUser>,
-  ) {}
+  ) { }
 
   // new bill
   async newBill(newBillDto: NewBillDto, user: IUser): Promise<any> {
@@ -93,14 +93,14 @@ export class AccountService {
       return a + b.bill;
     }, 0);
 
-    const items = bills.map(item => {
-      return item.description;
-    });
+    // const items = bills.map(item => {
+    //   return item.description;
+    // });
 
     return {
       userWallet: userAccount.wallet,
       total: pBills,
-      items,
+      items: bills,
     };
   }
 
@@ -116,15 +116,25 @@ export class AccountService {
       return a + b.bill;
     }, 0);
 
-    const items = bills.map(item => {
-      return item.description;
-    });
+    // const items = bills.map(item => {
+    //   return item.description;
+    // });
 
     return {
       userWallet: userAccount.wallet,
       afterPayBills: userAccount.wallet - npBills,
       total: npBills,
-      items,
+      items: bills.length <= 0 ? 'All good' : bills,
     };
+  }
+
+  // get bills per date
+  async billsPerDate(user: IUser, date: string): Promise<any> {
+    const bills = await this.accountModel
+      .find({ _user: user })
+      // $gte = greater than or equal, $lte = less then or equal
+      .where({ createdAt: { $gte: `${date}-01`, $lte: `${date}-30` } });
+
+    return bills;
   }
 }

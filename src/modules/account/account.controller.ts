@@ -1,20 +1,28 @@
-import { Controller, Body, Get, Post, Put, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Body,
+  Get,
+  Post,
+  Put,
+  UseGuards,
+  ValidationPipe,
+  Param,
+} from '@nestjs/common';
 import { AccountService } from './account.service';
 import { NewBillDto } from './dto/account.dto';
 import { GetUser } from '../../common';
 import { IUser } from '../user/interface/user.interface';
 import { AuthGuard } from '@nestjs/passport';
-// import { IAccount } from '../account/interface/account.interface';
 
 @Controller('bp/v1/account')
 export class AccountController {
-  constructor(private readonly accountService: AccountService) {}
+  constructor(private readonly accountService: AccountService) { }
 
   @Post('userbill')
   @UseGuards(AuthGuard('jwt'))
   async newBill(
     @GetUser() user: IUser,
-    @Body() newBillDto: NewBillDto,
+    @Body(ValidationPipe) newBillDto: NewBillDto,
   ): Promise<any> {
     return this.accountService.newBill(newBillDto, user);
   }
@@ -35,5 +43,11 @@ export class AccountController {
   @UseGuards(AuthGuard('jwt'))
   async insertBillToAccount(@GetUser() user: IUser): Promise<any> {
     return await this.accountService.insertBillToAccount(user);
+  }
+
+  @Get('billsdate/:date')
+  @UseGuards(AuthGuard('jwt'))
+  async billsPerDate(@GetUser() user: IUser, @Param('date') date: string): Promise<any> {
+    return await this.accountService.billsPerDate(user, date);
   }
 }

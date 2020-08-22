@@ -6,6 +6,7 @@ import {
   Body,
   Put,
   UseGuards,
+  ValidationPipe,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { IUser, Role } from './interface/user.interface';
@@ -34,7 +35,7 @@ export class UserController {
   async fatWallet(
     @Param('id') id: string,
     @GetUser() user: IUser,
-    @Body() creditDto: CreditDto,
+    @Body(ValidationPipe) creditDto: CreditDto,
   ): Promise<any> {
     return await this.userService.fatWallet(id, user, creditDto);
   }

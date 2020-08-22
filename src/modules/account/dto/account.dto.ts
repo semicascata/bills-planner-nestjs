@@ -1,16 +1,21 @@
-import { IsNotEmpty, IsNumber, MaxLength, IsBoolean } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumber,
+  MaxLength,
+  IsBoolean,
+  IsOptional,
+} from 'class-validator';
 
 export class NewBillDto {
   @IsNotEmpty()
   @IsNumber()
-  @MaxLength(7)
   bill: number;
 
   @IsNotEmpty()
   @MaxLength(100)
   description: string;
 
-  @IsNotEmpty()
   @IsBoolean()
+  @IsOptional()
   credited: boolean;
 }
