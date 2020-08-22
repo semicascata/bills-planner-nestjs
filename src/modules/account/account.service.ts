@@ -34,7 +34,7 @@ export class AccountService {
       await newBill.save();
 
       this.logger.verbose(
-        `New bill "${newBillDto.description}" of value ${newBillDto.bill} added to your account. Wallet: `,
+        `New bill "${newBillDto.description}" of value ${newBillDto.bill} added to your account`,
       );
 
       return newBill;
