@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module';
 import { Logger, InternalServerErrorException } from '@nestjs/common';
-import * as helmet from 'helmet';
+// import * as helmet from 'helmet';
 import * as xss from 'xss-clean'; // @types/xss-clean
 import * as hpp from 'hpp';
 import * as rateLimit from 'express-rate-limit';
@@ -20,7 +20,7 @@ async function bootstrap() {
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({ extended: true }));
 
-    app.use(helmet());
+    // app.use(helmet());
     app.use(xss());
     app.use(hpp());
 
