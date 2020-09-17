@@ -14,7 +14,7 @@ export const AccountSchema = new mongoose.Schema({
 
   description: {
     type: String,
-    unique: true,
+    // unique: true,
     max: 100,
     required: [true, 'please, insert a description'],
   },

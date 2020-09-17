@@ -7,6 +7,7 @@ import {
   UseGuards,
   ValidationPipe,
   Param,
+  Delete,
 } from '@nestjs/common';
 import { AccountService } from './account.service';
 import { NewBillDto } from './dto/account.dto';
@@ -49,5 +50,17 @@ export class AccountController {
   @UseGuards(AuthGuard('jwt'))
   async billsPerDate(@GetUser() user: IUser, @Param('date') date: string): Promise<any> {
     return await this.accountService.billsPerDate(user, date);
+  }
+
+  @Put('credited/:id')
+  @UseGuards(AuthGuard('jwt'))
+  async changeCredited(@GetUser() user: IUser, @Param('id') id: string): Promise<any> {
+    return await this.accountService.changeCredited(user, id);
+  };
+
+  @Delete(':id')
+  @UseGuards(AuthGuard('jwt'))
+  async deleteSingleBill(@GetUser() user: IUser, @Param('id') id: string): Promise<any> {
+    return await this.accountService.deleteSingleBill(user, id);
   }
 }

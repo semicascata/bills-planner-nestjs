@@ -137,4 +137,47 @@ export class AccountService {
 
     return bills;
   }
-}
+
+  // change bill "credited"
+  async changeCredited(user: IUser, id: string): Promise<any> {
+    const bill = await this.accountModel
+      .findOne({ _id: id })
+      .where({ _user: user.id, credited: true }); // account
+    const userWallet = await this.userModel.findOne({ _id: user.id }); // user
+
+    try {
+      bill['credited'] = false;
+      await bill.save();
+
+      userWallet['wallet'] = userWallet.wallet + bill.bill; // return 
+      await userWallet.save();
+
+      this.logger.verbose(`Bill "${bill.description}" changed to pendent bills`);
+      return {
+        bill,
+        walletBefore: userWallet.wallet - bill.bill,
+        walletAfter: userWallet.wallet.toFixed(2),
+      };
+    } catch (err) {
+      this.logger.error(`Cannot find bill by Id: "${id}"`);
+      throw new InternalServerErrorException(`Cannot find bill by Id: "${id}"`);
+    };
+  };
+
+  // delete single bill
+  async deleteSingleBill(user: IUser, id: string): Promise<any> {
+    const bill = await this.accountModel.findOne({ _id: id }).where({ _user: user.id }); // bill
+
+    try {
+      await this.accountModel.deleteOne({ _id: bill.id });
+      this.logger.verbose(`Bill "${bill.description}" deleted`);
+
+      return { bill };
+    } catch (err) {
+      this.logger.error(`Bill not founded by Id: ${id}`);
+      throw new InternalServerErrorException(`Bill not founded by Id: ${id}`);
+    };
+  };
+};
+
+
