@@ -17,7 +17,7 @@ import { AuthRole, GetUser } from '../../common';
 @Controller('bp/v1/users')
 @UseGuards(AuthGuard('jwt'))
 export class UserController {
-  constructor(private userService: UserService) {}
+  constructor(private userService: UserService) { }
 
   @Get()
   @AuthRole(Role.admin)
@@ -38,5 +38,13 @@ export class UserController {
     @Body(ValidationPipe) creditDto: CreditDto,
   ): Promise<any> {
     return await this.userService.fatWallet(id, user, creditDto);
+  }
+
+  @Put('wallet/change/value')
+  async changeWallet(
+    @GetUser() user: IUser,
+    @Body(ValidationPipe) creditDto: CreditDto,
+  ): Promise<any> {
+    return await this.userService.changeWallet(user, creditDto);
   }
 }

@@ -58,6 +58,12 @@ export class AccountController {
     return await this.accountService.changeCredited(user, id);
   };
 
+  @Put('userbill/:id')
+  @UseGuards(AuthGuard('jwt'))
+  async paySingleBill(@GetUser() user: IUser, @Param('id') id: string): Promise<any> {
+    return await this.accountService.paySingleBill(user, id);
+  };
+
   @Delete(':id')
   @UseGuards(AuthGuard('jwt'))
   async deleteSingleBill(@GetUser() user: IUser, @Param('id') id: string): Promise<any> {

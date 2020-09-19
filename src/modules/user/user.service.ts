@@ -11,7 +11,7 @@ import { CreditDto } from './dto/credit.dto';
 @Injectable()
 export class UserService {
   private logger = new Logger('UserService');
-  constructor(@InjectModel('User') private readonly userModel: Model<IUser>) {}
+  constructor(@InjectModel('User') private readonly userModel: Model<IUser>) { }
 
   // fetch users
   async fetchUsers(): Promise<IUser[]> {
@@ -68,5 +68,25 @@ export class UserService {
         `Failed to update wallet for user Id of "${id}", ${err.message}"`,
       );
     }
-  }
+  };
+
+  // change wallet credit
+  async changeWallet(user: IUser, creditDto: CreditDto): Promise<any> {
+    const userAcc = await this.userModel.findOne({ _id: user.id });
+    const { credit } = creditDto;
+
+    try {
+      userAcc['wallet'] = credit;
+      await userAcc.save();
+
+      this.logger.verbose(`User wallet value fixed to: ${credit}`);
+      return {
+        user: userAcc.username,
+        wallet: userAcc.wallet,
+      }
+    } catch (err) {
+      this.logger.error(`Error fixing wallet value: ${err.message}`);
+      throw new InternalServerErrorException(`Error fixing wallet value: ${err.message}`);
+    };
+  };
 }

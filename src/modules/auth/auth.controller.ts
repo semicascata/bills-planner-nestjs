@@ -7,16 +7,19 @@ import {
   UseGuards,
   Get,
   Req,
+  Put,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { NewUserDto } from '../user/dto/new-user.dto';
 import { IUser } from '../user/interface/user.interface';
 import { LoginDto } from './dto/login.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { GetUser } from 'src/common';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Controller('bp/v1/auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) { }
 
   @Post()
   async registerUser(
@@ -44,4 +47,13 @@ export class AuthController {
   async getUser(@Req() reqBody: any): Promise<IUser> {
     return await this.authService.getUser(reqBody);
   }
+
+  @Put('change-password')
+  @UseGuards(AuthGuard('jwt'))
+  async changePassowrd(
+    @GetUser() user: IUser,
+    @Body(ValidationPipe) changePasswordDto: ChangePasswordDto
+  ): Promise<any> {
+    return await this.authService.changePassword(user, changePasswordDto);
+  };
 }

@@ -46,6 +46,33 @@ export class AccountService {
     }
   }
 
+  // pay single bill
+  async paySingleBill(user: IUser, id: string): Promise<any> {
+    const userWallet = await this.userModel.findOne({ _id: user });
+    const bill = await this.accountModel.findOne({ _id: id }).where({ _user: user });
+
+    try {
+      userWallet['wallet'] = userWallet.wallet - bill.bill;
+      bill['credited'] = true;
+
+      userWallet.save();
+      bill.save();
+
+      this.logger.verbose(`Bill "${bill.description}" credited to account of user "${userWallet.username}"`);
+
+      return {
+        wallet: userWallet.wallet,
+        walletBefore: userWallet.wallet + bill.bill,
+        billDescription: bill.description,
+        billValue: bill.bill,
+        credited: bill.credited,
+      };
+    } catch (err) {
+      this.logger.error(`Error paying bill: ${err}`);
+      throw new InternalServerErrorException(`Error paying bill: ${err}`);
+    }
+  };
+
   // insert bill to the account
   async insertBillToAccount(user: IUser): Promise<any> {
     // user account
