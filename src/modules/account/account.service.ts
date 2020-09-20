@@ -109,20 +109,16 @@ export class AccountService {
   }
 
   // payed bills
-  async payedBills(user: IUser): Promise<any> {
+  async payedBills(user: IUser, date: string): Promise<any> {
     const bills = await this.accountModel
       .find({ _user: user })
-      .where({ credited: true });
+      .where({ credited: true, createdAt: { $gte: `${date}-01`, $lte: `${date}-30` } });
 
     const userAccount = await this.userModel.findOne({ _id: user.id });
 
     const pBills = bills.reduce((a, b) => {
       return a + b.bill;
     }, 0);
-
-    // const items = bills.map(item => {
-    //   return item.description;
-    // });
 
     return {
       userWallet: userAccount.wallet,
@@ -132,10 +128,10 @@ export class AccountService {
   }
 
   // bill to pay
-  async needToPay(user: IUser): Promise<any> {
+  async needToPay(user: IUser, date: string): Promise<any> {
     const bills = await this.accountModel
       .find({ _user: user })
-      .where({ credited: false });
+      .where({ credited: false, createdAt: { $gte: `${date}-01`, $lte: `${date}-30` } });
 
     const userAccount = await this.userModel.findOne({ _id: user.id });
 
@@ -143,26 +139,12 @@ export class AccountService {
       return a + b.bill;
     }, 0);
 
-    // const items = bills.map(item => {
-    //   return item.description;
-    // });
-
     return {
       userWallet: userAccount.wallet,
       afterPayBills: userAccount.wallet - npBills,
       total: npBills,
       items: bills.length <= 0 ? 'All good' : bills,
     };
-  }
-
-  // get bills per date
-  async billsPerDate(user: IUser, date: string): Promise<any> {
-    const bills = await this.accountModel
-      .find({ _user: user })
-      // $gte = greater than or equal, $lte = less then or equal
-      .where({ createdAt: { $gte: `${date}-01`, $lte: `${date}-30` } });
-
-    return bills;
   }
 
   // change bill "credited"
@@ -204,6 +186,42 @@ export class AccountService {
       this.logger.error(`Bill not founded by Id: ${id}`);
       throw new InternalServerErrorException(`Bill not founded by Id: ${id}`);
     };
+  };
+
+  // get user account info
+  async getAccount(user: IUser): Promise<any> {
+    const userAcc = await this.userModel.findOne({ _id: user.id });
+    const payed = await this.accountModel.find({ _user: user.id })
+      .where({ credited: true });
+    const pendent = await this.accountModel.find({ _user: user.id })
+      .where({ credited: false });
+
+    try {
+      // sum payed bills
+      const pBills = payed.reduce((a, b) => {
+        return a + b.bill;
+      }, 0);
+
+      // sum pendent bills
+      const npBills = pendent.reduce((a, b) => {
+        return a + b.bill;
+      }, 0);
+
+      this.logger.verbose(`User "${userAcc.username}" account info`);
+
+      return {
+        user: userAcc.username,
+        joined: userAcc.createdAt,
+        wallet: userAcc.wallet,
+        totalPayed: pBills,
+        payedItems: payed.length,
+        totalPendent: npBills,
+        pendentItems: pendent.length,
+      }
+    } catch (err) {
+      this.logger.error(`Error retrieving account info: ${err.message}`);
+      throw new InternalServerErrorException(`Error retrieving account info: ${err.message}`);
+    }
   };
 };
 

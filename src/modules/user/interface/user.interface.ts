@@ -6,7 +6,7 @@ export interface IUser extends Document {
   password: string;
   role: Role;
   wallet: number;
-  readonly created_at: Date;
+  readonly createdAt: Date;
 }
 
 export enum Role {

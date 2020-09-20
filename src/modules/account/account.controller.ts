@@ -28,28 +28,22 @@ export class AccountController {
     return this.accountService.newBill(newBillDto, user);
   }
 
-  @Get('payed')
+  @Get('payed/:date')
   @UseGuards(AuthGuard('jwt'))
-  async payedBills(@GetUser() user: IUser): Promise<any> {
-    return await this.accountService.payedBills(user);
+  async payedBills(@GetUser() user: IUser, @Param('date') date: string): Promise<any> {
+    return await this.accountService.payedBills(user, date);
   }
 
-  @Get('needtopay')
+  @Get('needtopay/:date')
   @UseGuards(AuthGuard('jwt'))
-  async needToPay(@GetUser() user: IUser): Promise<any> {
-    return await this.accountService.needToPay(user);
+  async needToPay(@GetUser() user: IUser, @Param('date') date: string): Promise<any> {
+    return await this.accountService.needToPay(user, date);
   }
 
   @Put('userbill/commit')
   @UseGuards(AuthGuard('jwt'))
   async insertBillToAccount(@GetUser() user: IUser): Promise<any> {
     return await this.accountService.insertBillToAccount(user);
-  }
-
-  @Get('billsdate/:date')
-  @UseGuards(AuthGuard('jwt'))
-  async billsPerDate(@GetUser() user: IUser, @Param('date') date: string): Promise<any> {
-    return await this.accountService.billsPerDate(user, date);
   }
 
   @Put('credited/:id')
@@ -69,4 +63,10 @@ export class AccountController {
   async deleteSingleBill(@GetUser() user: IUser, @Param('id') id: string): Promise<any> {
     return await this.accountService.deleteSingleBill(user, id);
   }
+
+  @Get('userinfo')
+  @UseGuards(AuthGuard('jwt'))
+  async getAccount(@GetUser() user: IUser): Promise<any> {
+    return await this.accountService.getAccount(user);
+  };
 }
